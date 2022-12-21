@@ -1,0 +1,15 @@
+[package]
+name = "ceiling"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+dashmap = "5"
+ceiling-macros = { path = "../ceiling-macros" }
+sero = "0.1"
+async-trait = { version = "0.1", optional = true }
+serde = { version = "1.0", optional = true }
+
+[features]
+default = []
+async = ["dep:async-trait"]
