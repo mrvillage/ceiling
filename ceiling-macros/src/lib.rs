@@ -1,3 +1,6 @@
+//! Ceiling is a simple, lightweight, and highly configurable library for handling and creating rate limiting rules.
+//!
+//! The main entrypoint to the library is the `rate_limiter!` macro found below.
 mod generic_input;
 mod group_input;
 mod rate_limiter_input;
@@ -51,13 +54,15 @@ use syn::{parse_macro_input, Ident, LitStr, Path, Result};
 /// ```
 ///
 /// ## Headers/Metadata Attributes
-/// X-RateLimit-Limit / "limit" -> limit of hits per interval seconds
-/// X-RateLimit-Interval / "interval" -> interval before bucket resets after first hit
-/// X-RateLimit-Timeout / "timeout" -> timeout before the bucket resets after limit is reached
-/// X-RateLimit-Remaining / "remaining" -> hits remaining in interval
-/// X-RateLimit-Reset / "reset" -> timestamp in seconds when the bucket resets
-/// X-RateLimit-Reset-After / "reset_after" -> seconds until bucket resets
-/// X-RateLimit-Key / "key" -> the bucket key, may be shared between routes and therefore useful for client-side rate limiting
+/// | Header                  | Attribute     | Description                                                                                     |
+/// | ----------------------- | ------------- | ----------------------------------------------------------------------------------------------- |
+/// | X-RateLimit-Limit       | "limit"       | limit of hits per interval seconds                                                              |
+/// | X-RateLimit-Interval    | "interval"    | interval before bucket resets after first hit                                                   |
+/// | X-RateLimit-Timeout     | "timeout"     | timeout before the bucket resets after limit is reached                                         |
+/// | X-RateLimit-Remaining   | "remaining"   | hits remaining in interval                                                                      |
+/// | X-RateLimit-Reset       | "reset"       | timestamp in seconds when the bucket resets                                                     |
+/// | X-RateLimit-Reset-After | "reset_after" | seconds until bucket resets                                                                     |
+/// | X-RateLimit-Key         | "key"         | the bucket key, may be shared between routes and therefore useful for client-side rate limiting |
 #[proc_macro]
 pub fn rate_limiter(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     impl_rate_limiter(parse_macro_input!(input as RateLimiterInput))

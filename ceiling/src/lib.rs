@@ -1,3 +1,6 @@
+//! Ceiling is a simple, lightweight, and highly configurable library for handling and creating rate limiting rules.
+//!
+//! The main entrypoint to the library is the `rate_limiter!` macro found below.
 mod store;
 
 pub use ceiling_macros::{group, rate_limiter};
