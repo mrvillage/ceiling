@@ -6,6 +6,7 @@ description = "A simple, lightweight, and highly configurable library for handli
 license = "MIT"
 repository = "https://github.com/mrvillage/ceiling"
 documentation = "https://docs.rs/ceiling"
+readme = "../readme.MD"
 
 [dependencies]
 dashmap = "5"
