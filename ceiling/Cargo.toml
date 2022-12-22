@@ -2,6 +2,10 @@
 name = "ceiling"
 version = "0.1.0"
 edition = "2021"
+description = "A simple, lightweight, and highly configurable library for handling and creating rate limiting rules."
+license = "MIT"
+repository = "https://github.com/mrvillage/ceiling"
+documentation = "https://docs.rs/ceiling"
 
 [dependencies]
 dashmap = "5"
