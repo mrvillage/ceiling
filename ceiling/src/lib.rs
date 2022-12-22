@@ -10,7 +10,7 @@ mod tests {
     use super::*;
 
     pub mod ceiling {
-        pub use crate::store::DefaultStore;
+        pub use crate::store::{DefaultStore, SyncStore};
     }
 
     ceiling_macros::rate_limiter! {

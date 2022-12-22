@@ -3,6 +3,9 @@ use std::{collections::BinaryHeap, sync::Mutex};
 use dashmap::DashMap;
 use sero::{LockGuard, LockStore};
 
+/// The default store implementation if none is specified when creating a rate limiter.
+/// The default implementation uses `dashmap::DashMap` to store buckets, `sero::LockStore` to store locks,
+/// and a `std::collections::BinaryHeap` containing the expiry times for pruning expired buckets.
 #[derive(Debug)]
 pub struct DefaultStore {
     map: DashMap<String, (u32, u64)>,
@@ -11,7 +14,7 @@ pub struct DefaultStore {
 }
 
 #[derive(Debug, PartialEq, Eq)]
-struct Expiry(pub u64, pub String);
+struct Expiry(pub(crate) u64, pub(crate) String);
 
 impl PartialOrd for Expiry {
     #[inline]
@@ -101,42 +104,57 @@ impl SyncStore for DefaultStore {
     }
 }
 
+/// The trait providing the required methods for a synchronous store of buckets.
 pub trait SyncStore: std::fmt::Debug + Send + Sync {
+    /// The type of the Lock returned from `SyncStore::get`, must implement `ceiling::StoreLock`.
     type Lock: StoreLock;
 
+    /// Creates a new store
     fn new() -> Self
     where
         Self: Sized;
+    /// Gets a bucket from the store, the return value must implement `ceiling::StoreLock`
     fn get(&self, key: &str) -> Self::Lock;
-    // Sets the value at key to value, if reset_updated is true then the u64 reset value was updated. This may be helpful for internal implementations of Self::prune.
+    /// Sets the value of a bucket in the store.
+    /// If reset_updated is true then the u64 reset value was updated. This may be helpful for internal implementations of `SyncStore::prune`.
     fn set(&self, key: &str, value: (u32, u64), reset_updated: bool);
+    /// Removes a bucket from the store.
     fn remove(&self, key: &str);
-    // Prunes the store of any expired values.
+    /// Prunes the store of any expired values. Any bucket with a reset value less than the provided now value is considered expired.
     fn prune(&self, now: u64);
 }
-
+///
 #[cfg(feature = "async")]
 #[async_trait::async_trait]
 pub trait AsyncStore: std::fmt::Debug + Send + Sync {
+    /// The type of the Lock returned from `AsyncStore::get`, must implement `ceiling::StoreLock`.
     type Lock: StoreLock;
 
+    /// Creates a new store
     fn new() -> Self
     where
         Self: Sized;
+    /// Gets a bucket from the store, the return value must implement `ceiling::StoreLock`
     async fn get(&self, key: &str) -> Self::Lock;
-    // Sets the value at key to value, if reset_updated is true then the u64 reset value was updated. This may be helpful for internal implementations of Self::prune.
+    /// Sets the value of a bucket in the store.
+    /// If reset_updated is true then the u64 reset value was updated. This may be helpful for internal implementations of `AsyncStore::prune`.
     async fn set(&self, key: &str, value: (u32, u64), reset_updated: bool);
+    /// Removes a bucket from the store.
     async fn remove(&self, key: &str);
-    // Prunes the store of any expired values.
+    /// Prunes the store of any expired values. Any bucket with a reset value less than the provided now value is considered expired.
     async fn prune(&self, now: u64);
 }
 
-/// The lock should be released when the implementor is dropped
+/// The implementor of this trait is expected to dereference into an Option<(u32, u64)> with the items
+/// in the tuple corresponding to the remaining requests and the reset time in seconds respectively.
+/// While an instance of this trait is alive the corresponding rate limiting bucket is considered locked and
+/// no changes should be made until the implementor is dropped, meaning the lock has been released.
 pub trait StoreLock:
     std::ops::Deref<Target = Option<(u32, u64)>> + std::fmt::Debug + Send + Sync
 {
 }
 
+/// The default implementation of `StoreLock` for use with `DefaultStore`.
 #[derive(Debug)]
 pub struct DefaultStoreLock {
     value: Option<(u32, u64)>,
@@ -154,6 +172,7 @@ impl std::ops::Deref for DefaultStoreLock {
 }
 
 impl DefaultStoreLock {
+    /// Creates a new `DefaultStoreLock`
     pub fn new(value: Option<(u32, u64)>, guard: LockGuard<String>) -> Self {
         Self {
             value,
