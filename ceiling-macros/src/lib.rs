@@ -32,6 +32,7 @@ use syn::{parse_macro_input, Ident, LitStr, Path, Result};
 ///     // `async` says the following custom store is asynchronous
 ///     // i.e. implements `ceiling::AsyncStore` instead of `ceiling::SyncStore`
 ///     // `in crate::MyAsyncStore` tells the macro to use the struct `crate::MyAsyncStore` for the bucket stores
+///     // specifying a bucket store is not required, if none is provided it will use `ceiling::DefaultStore`
 ///     } as RateLimiter async in crate::MyAsyncStore
 /// }
 /// ```
